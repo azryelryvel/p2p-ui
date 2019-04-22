@@ -1,3 +1,6 @@
-build
-.idea
+.idea/
 *.iml
+build
+target
+src2
+out
