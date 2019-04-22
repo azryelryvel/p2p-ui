@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "net.azry.p2p";
+option java_outer_classname = "DaemonControllerProto";
+option objc_class_prefix = "DCP";
+
+package net.azry.p2p;
+
+service DownloadManager {
+    rpc addDownload (DownloadInfo) returns (DownloadInfo) {}
+}
+
+message DownloadInfo {
+    bool active = 1;
+    string url = 2;
+    bool success = 3;
+}
