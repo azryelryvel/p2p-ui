@@ -29,9 +29,6 @@ public class LoginView extends VerticalLayout {
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                     component.setError(true);
-                } catch (ClassNotFoundException ex) {
-                    ex.printStackTrace();
-                    component.setError(true);
                 }
             }
         });

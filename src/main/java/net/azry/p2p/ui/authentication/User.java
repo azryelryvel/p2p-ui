@@ -5,7 +5,10 @@ import net.azry.p2p.ui.database.DatabaseConnectionFactory;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.authc.credential.DefaultPasswordService;
+import org.apache.shiro.authc.credential.PasswordService;
 import org.apache.shiro.crypto.hash.DefaultHashService;
+import org.apache.shiro.crypto.hash.Hash;
+import org.apache.shiro.crypto.hash.HashRequest;
 import org.apache.shiro.crypto.hash.Sha256Hash;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.util.SimpleByteSource;
@@ -33,7 +36,9 @@ public class User {
 
         try {
             Subject currentUser = SecurityUtils.getSubject();
-            UsernamePasswordToken token = new UsernamePasswordToken(username, generateSaltedHashedPassword(password));
+            UsernamePasswordToken token = new UsernamePasswordToken(username, password);
+            generateSaltedHashedPassword(password);
+
             currentUser.login(token);
             isAuthenticated = currentUser.isAuthenticated();
         } catch (IllegalStateException e) {
@@ -50,7 +55,8 @@ public class User {
         return isAuthenticated;
     }
 
-    public void register(String password) throws SQLException, ClassNotFoundException {
+    public void register(String password) throws SQLException {
+        /*
         String newHashedPassword = generateSaltedHashedPassword(password);
 
         Connection connection = DatabaseConnectionFactory.getDatabaseConnection();
@@ -60,24 +66,31 @@ public class User {
         statement.setString(2, password);
         statement.setString(3, salt);
         statement.execute();
+        */
     }
 
-    public static void authorized(){
-        if(null != SecurityUtils.getSubject().getPrincipal()){
-        }
-    }
-
-    private static String generateSaltedHashedPassword(String password) {
+    private static String[] generateSaltedHashedPassword(String password) {
         String privateSalt = Config.properties.get("authentication.private_salt");
         int iterations = Integer.parseInt(Config.properties.get("authentication.hash_iterations"));
+
+        String publicSalt = new BigInteger(250, new SecureRandom()).toString(32);
+
         DefaultHashService hashService = new DefaultHashService();
         hashService.setHashIterations(iterations);
         hashService.setHashAlgorithmName(Sha256Hash.ALGORITHM_NAME);
         hashService.setPrivateSalt(new SimpleByteSource(privateSalt));
-        hashService.setGeneratePublicSalt(true);
-        DefaultPasswordService passwordService = new DefaultPasswordService();
-        passwordService.setHashService(hashService);
-        return passwordService.encryptPassword(password);
 
+        HashRequest request = new HashRequest.Builder().setSalt(new SimpleByteSource(publicSalt)).setSource(new SimpleByteSource(password)).build();
+
+        Hash hash = hashService.computeHash(request);
+
+        System.out.println("Hash: " + hash.toHex());
+        System.out.println("public salt: " + publicSalt);
+        System.out.println("private salt: " + privateSalt);
+
+        String[] result = new String[2];
+        result[0] = hash.toHex();
+        result[1] = publicSalt;
+        return result;
     }
 }
