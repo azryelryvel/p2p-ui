@@ -1,4 +1,4 @@
-package com.example.ui;
+package net.azry.p2p.ui;
 
 import com.vaadin.flow.server.VaadinServlet;
 import com.vaadin.flow.server.VaadinServletConfiguration;

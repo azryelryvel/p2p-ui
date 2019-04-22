@@ -1,4 +1,4 @@
-package com.example.ui;
+package net.azry.p2p.ui;
 
 import com.vaadin.flow.component.dependency.HtmlImport;
 import com.vaadin.flow.component.UI;
