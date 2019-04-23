@@ -37,14 +37,18 @@ public class User {
         try {
             Subject currentUser = SecurityUtils.getSubject();
             UsernamePasswordToken token = new UsernamePasswordToken(username, password);
-            generateSaltedHashedPassword(password);
+            String[] creds = generateSaltedHashedPassword(password);
 
             currentUser.login(token);
             isAuthenticated = currentUser.isAuthenticated();
         } catch (IllegalStateException e) {
             System.out.println("illegal");
         } catch (UnknownAccountException uae ) {
-            System.out.println("unknownaccount");
+            try {
+                this.register(password);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         } catch (IncorrectCredentialsException ice ) {
             System.out.println("incorrect");
         } catch (LockedAccountException lae ) {
@@ -56,28 +60,26 @@ public class User {
     }
 
     public void register(String password) throws SQLException {
-        /*
-        String newHashedPassword = generateSaltedHashedPassword(password);
+        String[] creds = generateSaltedHashedPassword(password);
 
         Connection connection = DatabaseConnectionFactory.getDatabaseConnection();
         String query = "INSERT INTO users (username, password, password_salt) VALUES (?, ?, ?);";
         PreparedStatement statement = connection.prepareStatement(query);
         statement.setString(1, username);
-        statement.setString(2, password);
-        statement.setString(3, salt);
+        statement.setString(2, creds[0]);
+        statement.setString(3, creds[1]);
         statement.execute();
-        */
     }
 
     private static String[] generateSaltedHashedPassword(String password) {
         String privateSalt = Config.properties.get("authentication.private_salt");
-        int iterations = Integer.parseInt(Config.properties.get("authentication.hash_iterations"));
-
+        String algorithm = Config.properties.get("authentication.hash.algorithm");
+        int iterations = Integer.parseInt(Config.properties.get("authentication.hash.iterations"));
         String publicSalt = new BigInteger(250, new SecureRandom()).toString(32);
 
         DefaultHashService hashService = new DefaultHashService();
         hashService.setHashIterations(iterations);
-        hashService.setHashAlgorithmName(Sha256Hash.ALGORITHM_NAME);
+        hashService.setHashAlgorithmName(algorithm);
         hashService.setPrivateSalt(new SimpleByteSource(privateSalt));
 
         HashRequest request = new HashRequest.Builder().setSalt(new SimpleByteSource(publicSalt)).setSource(new SimpleByteSource(password)).build();

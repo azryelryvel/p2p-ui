@@ -23,13 +23,6 @@ public class LoginView extends VerticalLayout {
 
             if (user.login(e.getPassword())) {
                 System.out.println("Login OK");
-            } else {
-                try {
-                    user.register(e.getPassword());
-                } catch (SQLException ex) {
-                    ex.printStackTrace();
-                    component.setError(true);
-                }
             }
         });
         add(component);
