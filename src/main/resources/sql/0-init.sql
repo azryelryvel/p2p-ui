@@ -1,0 +1,1 @@
+create table users (id integer not null auto_increment, username varchar(256) not null unique, email varchar(256) not null, password varchar(256) not null, password_salt varchar(256) not null, primary key(id));

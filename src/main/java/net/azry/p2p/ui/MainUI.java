@@ -7,6 +7,5 @@ import com.vaadin.flow.theme.Theme;
 
 @HtmlImport("frontend://styles/ui-theme.html")
 @Theme(Lumo.class)
-public class UiUI extends UI { }
-
-
+public class MainUI extends UI {
+}

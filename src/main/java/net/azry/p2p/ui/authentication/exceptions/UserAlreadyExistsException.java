@@ -1,15 +1,15 @@
 package net.azry.p2p.ui.authentication.exceptions;
 
 public class UserAlreadyExistsException extends IllegalArgumentException {
-    UserAlreadyExistsException() {
+    public UserAlreadyExistsException() {
        super();
     }
 
-    UserAlreadyExistsException(String message) {
+    public UserAlreadyExistsException(String message) {
         super(message);
     }
 
-    UserAlreadyExistsException(String message, Throwable throwable) {
+    public UserAlreadyExistsException(String message, Throwable throwable) {
         super(message, throwable);
     }
 }
