@@ -61,9 +61,10 @@ public class AuthenticationUtils {
 			String password = new BigInteger(250, new SecureRandom()).toString(32).substring(0, passLength - 1);
 
 			User admin = new User();
-			admin.displayName = displayName;
-			admin.email = email;
+			admin.setDisplayName(displayName);
+			admin.setEmail(email);
 			admin.register(password);
+			admin.addRole(Roles.USER);
 			admin.addRole(Roles.ADMIN);
 
 			System.out.println("Created new admin user " + displayName + " with password " + password);

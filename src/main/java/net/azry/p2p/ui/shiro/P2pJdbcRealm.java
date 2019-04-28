@@ -14,8 +14,9 @@ import javax.sql.DataSource;
 
 public class P2pJdbcRealm extends JdbcRealm {
 	public P2pJdbcRealm() {
-		setAuthenticationQuery("select password, password_salt from users where uuid = ?");
-		setUserRolesQuery("select role_name from user_roles where uuid = ?");
+		setAuthenticationQuery("select password, salt from users where uuid = ?");
+		setUserRolesQuery("select role from roles where uuid = ?");
+		setPermissionsQuery("select permission from permissions where role = ?");
 
 		setSaltStyle(SaltStyle.COLUMN);
 

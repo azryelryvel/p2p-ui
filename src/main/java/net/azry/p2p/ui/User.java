@@ -11,16 +11,16 @@ import org.apache.shiro.subject.Subject;
 
 import java.security.InvalidParameterException;
 import java.sql.*;
-import java.util.UUID;
-
-// TODO : logs instead of println, move security parts to other class
+import java.util.*;
 
 public class User {
-	public String uuid;
+	private String uuid;
 
-	public String displayName;
+	private String displayName;
 
-	public String email;
+	private String email;
+
+	private Set<Roles> roles;
 
 	public User() {
 		uuid = UUID.randomUUID().toString();
@@ -75,7 +75,7 @@ public class User {
 		String[] creds = AuthenticationUtils.generateSaltedHashedPassword(password);
 
 		Connection connection = DatabaseConnectionFactory.getDatabaseConnection();
-		String query = "INSERT INTO users (uuid, display_name, email, password, password_salt) VALUES (?, ?, ?, ?, ?)";
+		String query = "INSERT INTO users (uuid, display_name, email, password, salt) VALUES (?, ?, ?, ?, ?)";
 		PreparedStatement statement = connection.prepareStatement(query);
 		statement.setString(1, uuid);
 		statement.setString(2, displayName);
@@ -90,9 +90,9 @@ public class User {
 	public void addRole(Roles role) throws SQLException {
 		Connection connection = DatabaseConnectionFactory.getDatabaseConnection();
 
-		String query = "SELECT 1 FROM user_roles WHERE role_name = ? AND uuid = ?";
+		String query = "SELECT 1 FROM roles WHERE role = ? AND uuid = ?";
 		PreparedStatement statement = connection.prepareStatement(query);
-		statement.setString(1, role.label);
+		statement.setString(1, role.toString());
 		statement.setString(2, uuid);
 		ResultSet rs = statement.executeQuery();
 		boolean alreadyHasRole = rs.next();
@@ -102,10 +102,10 @@ public class User {
 			return;
 		}
 
-		query = "INSERT INTO user_roles (uuid, role_name) values (?, ?);";
+		query = "INSERT INTO roles (uuid, role) values (?, ?);";
 		statement = connection.prepareStatement(query);
 		statement.setString(1, uuid);
-		statement.setString(2, role.label);
+		statement.setString(2, role.toString());
 		statement.execute();
 		statement.close();
 	}
@@ -113,7 +113,7 @@ public class User {
 	public void updatePassword(String password) throws SQLException {
 		String[] newCreds = AuthenticationUtils.generateSaltedHashedPassword(password);
 		Connection connection = DatabaseConnectionFactory.getDatabaseConnection();
-		String query = "UPDATE users SET password = ?, password_salt = ? WHERE uuid = ?;";
+		String query = "UPDATE users SET password = ?, salt = ? WHERE uuid = ?;";
 		PreparedStatement statement = connection.prepareStatement(query);
 		statement.setString(1, newCreds[0]);
 		statement.setString(2, newCreds[1]);
@@ -122,25 +122,26 @@ public class User {
 		statement.close();
 	}
 
-	public void updateUsername(String username) throws SQLException, UsernameAlreadyExistsException {
+	public void updateDisplayName(String displayName) throws SQLException, UsernameAlreadyExistsException {
 		Connection connection = DatabaseConnectionFactory.getDatabaseConnection();
 		String query = "SELECT 1 FROM users WHERE display_name = ?;";
 		PreparedStatement statement = connection.prepareStatement(query);
-		statement.setString(1, username);
+		statement.setString(1, displayName);
 		ResultSet rs = statement.executeQuery();
 		boolean userExists = rs.next();
 		rs.close();
 		statement.close();
 		if (userExists) {
-			throw new UsernameAlreadyExistsException("Username " + username + " already exists");
+			throw new UsernameAlreadyExistsException("Username " + displayName + " already exists");
 		}
 
 		query = "UPDATE users SET display_name = ? WHERE uuid = ?;";
 		statement = connection.prepareStatement(query);
-		statement.setString(1, username);
+		statement.setString(1, displayName);
 		statement.setString(2, this.uuid);
 		statement.execute();
 		statement.close();
+		this.displayName = displayName;
 	}
 
 	public void updateEmail(String email) throws SQLException {
@@ -183,10 +184,64 @@ public class User {
 	}
 
 	public boolean hasRole(Roles role) {
-		return SecurityUtils.getSubject().hasRole(role.label);
+		return SecurityUtils.getSubject().hasRole(role.toString());
 	}
 
 	public boolean isAdmin() {
 		return hasRole(Roles.ADMIN);
 	}
+
+	public static Set<User> listUsersByRole(Roles role) {
+		Set<User> userList = new HashSet<>();
+		try {
+			Connection connection = DatabaseConnectionFactory.getDatabaseConnection();
+			String query = "SELECT users.uuid, users.display_name, users.email FROM users LEFT JOIN (roles) ON (roles.uuid = users.uuid) WHERE roles.role = ?;";
+			PreparedStatement statement = connection.prepareStatement(query);
+			statement.setString(1, role.toString());
+			ResultSet rs = statement.executeQuery();
+			while (rs.next()) {
+				String uuid = rs.getString(1);
+				String displayName = rs.getString(2);
+				String email = rs.getString(3);
+
+				User user = new User(uuid);
+				user.displayName = displayName;
+				user.email = email;
+				userList.add(user);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return userList;
+
+	}
+
+	public String getUuid() {
+		return uuid;
+	}
+
+	public String getDisplayName() {
+		return displayName;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
+	}
+
+	public void setDisplayName(String displayName) {
+		this.displayName = displayName;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public Set<Roles> getRoles() {
+		return roles;
+	}
+
 }

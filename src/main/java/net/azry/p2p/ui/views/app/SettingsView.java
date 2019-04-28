@@ -27,14 +27,14 @@ public class SettingsView extends VerticalLayout {
 		usernameField.setPlaceholder("john_doe_321");
 		usernameField.setWidth(width);
 		usernameField.setMinWidth(minWidth);
-		usernameField.setValue(user.displayName);
+		usernameField.setValue(user.getDisplayName());
 
 		EmailField emailField = new EmailField();
 		emailField.setLabel("E-Mail");
 		emailField.setPlaceholder("john.doe.321@example.com");
 		emailField.setWidth(width);
 		emailField.setMinWidth(minWidth);
-		emailField.setValue(user.email);
+		emailField.setValue(user.getEmail());
 
 		PasswordField passwordField = new PasswordField();
 		passwordField.setLabel("Password");
@@ -47,19 +47,17 @@ public class SettingsView extends VerticalLayout {
 			String newEmail = emailField.getValue();
 			String newPassword = passwordField.getValue();
 
-			if (!user.displayName.equals(newUsernname)) {
+			if (!user.getDisplayName().equals(newUsernname)) {
 				try {
-					user.updateUsername(newUsernname);
-					user.displayName = newUsernname;
+					user.updateDisplayName(newUsernname);
 				} catch (SQLException e) {
 					// TODO:  add a div showing that there was a problem
 					e.printStackTrace();
 				}
 			}
-			if (!user.email.equals(newEmail)) {
+			if (!user.getEmail().equals(newEmail)) {
 				try {
 					user.updateEmail(newEmail);
-					user.email = newEmail;
 				} catch (SQLException e) {
 					// TODO:  add a div showing that there was a problem
 					e.printStackTrace();
