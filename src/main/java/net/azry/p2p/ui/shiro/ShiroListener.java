@@ -1,4 +1,4 @@
-package net.azry.p2p.ui.authentication;
+package net.azry.p2p.ui.shiro;
 
 import org.apache.shiro.web.env.EnvironmentLoaderListener;
 

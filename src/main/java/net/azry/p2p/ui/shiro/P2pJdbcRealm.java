@@ -1,4 +1,4 @@
-package net.azry.p2p.ui.authentication;
+package net.azry.p2p.ui.shiro;
 
 import net.azry.p2p.ui.Config;
 import net.azry.p2p.ui.database.DataSourceFactory;
@@ -14,10 +14,10 @@ import javax.sql.DataSource;
 
 public class P2pJdbcRealm extends JdbcRealm {
 	public P2pJdbcRealm() {
-		String authenticationQuery = Config.properties.get("authentication.query");
+		setAuthenticationQuery("select password, password_salt from users where uuid = ?");
+		setUserRolesQuery("select role_name from user_roles where uuid = ?");
 
 		setSaltStyle(SaltStyle.COLUMN);
-		setAuthenticationQuery(authenticationQuery);
 
 		PasswordMatcher matcher = new PasswordMatcher();
 		matcher.setPasswordService(getPasswordService());

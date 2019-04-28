@@ -1,6 +1,9 @@
-package net.azry.p2p.ui.authentication;
+package net.azry.p2p.ui.shiro.authc;
 
 import net.azry.p2p.ui.Config;
+import net.azry.p2p.ui.shiro.P2pJdbcRealm;
+import net.azry.p2p.ui.User;
+import net.azry.p2p.ui.shiro.authz.Roles;
 import net.azry.p2p.ui.database.DatabaseConnectionFactory;
 import org.apache.shiro.crypto.hash.Hash;
 import org.apache.shiro.crypto.hash.HashRequest;
@@ -45,28 +48,25 @@ public class AuthenticationUtils {
 			String query = "select 1 from users;";
 			PreparedStatement statement = connection.prepareStatement(query);
 			ResultSet resultSet = statement.executeQuery();
-			if (resultSet.next()) {
-				isInitialized  = true;
-				return;
-			}
+			isInitialized = resultSet.next();
 			resultSet.close();
 			statement.close();
+			if (isInitialized) {
+				return;
+			}
 
-			String username = Config.properties.get("authentication.default_admin");
+			String displayName = Config.properties.get("authentication.default_admin");
 			String email = Config.properties.get("authentication.default_admin_mail");
 			int passLength = Integer.parseInt(Config.properties.get("authentication.default_admin_password_length"));
 			String password = new BigInteger(250, new SecureRandom()).toString(32).substring(0, passLength - 1);
-			String[] creds = generateSaltedHashedPassword(password);
 
-			query = "INSERT INTO users (username, email, password, password_salt) values (?, ?, ?, ?);";
-			statement = connection.prepareStatement(query);
-			statement.setString(1, username);
-			statement.setString(2, email);
-			statement.setString(3, creds[0]);
-			statement.setString(4, creds[1]);
-			statement.execute();
-			statement.close();
-			System.out.println("Created new user " + username + " with password " + password);
+			User admin = new User();
+			admin.displayName = displayName;
+			admin.email = email;
+			admin.register(password);
+			admin.addRole(Roles.ADMIN);
+
+			System.out.println("Created new admin user " + displayName + " with password " + password);
 			isInitialized = true;
 		} catch (SQLException e) {
 			e.printStackTrace();
