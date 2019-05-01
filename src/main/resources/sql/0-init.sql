@@ -4,6 +4,7 @@ CREATE TABLE users (
     email varchar(256) NOT NULL,
     password varchar(256) NOT NULL,
     salt varchar(256) NOT NULL,
+    locked boolean NOT NULL DEFAULT(0),
     PRIMARY KEY(uuid)
 );
 
@@ -16,18 +17,19 @@ CREATE TABLE roles (
 );
 
 CREATE TABLE permissions (
+    id integer NOT NULL AUTO_INCREMENT,
     permission varchar(256) NOT NULL,
     role varchar(256) NOT NULL,
-    PRIMARY KEY(permission)
+    PRIMARY KEY(id)
 );
 
-INSERT INTO roles_permissions (permission, role_name) values ('home_page', 'USER');
-INSERT INTO roles_permissions (permission, role_name) values ('dashboard_page', 'USER');
-INSERT INTO roles_permissions (permission, role_name) values ('settings_page', 'USER');
+INSERT INTO permissions (role, permission) values ('USER', 'view:home');
+INSERT INTO permissions (role, permission) values ('USER', 'view:dashboard');
+INSERT INTO permissions (role, permission) values ('USER', 'view:mydownloads');
+INSERT INTO permissions (role, permission) values ('USER', 'view:myuploads');
+INSERT INTO permissions (role, permission) values ('USER', 'view:shareddownloads');
+INSERT INTO permissions (role, permission) values ('USER', 'view:settings');
 
-INSERT INTO roles_permissions (permission, role_name) values ('list_users', 'ADMIN');
-INSERT INTO roles_permissions (permission, role_name) values ('add_users', 'ADMIN');
-INSERT INTO roles_permissions (permission, role_name) values ('edit_users', 'ADMIN');
-INSERT INTO roles_permissions (permission, role_name) values ('delete_users', 'ADMIN');
-INSERT INTO roles_permissions (permission, role_name) values ('edit_role', 'ADMIN');
+INSERT INTO permissions (role, permission) values ('ADMIN', 'view:administration');
+INSERT INTO permissions (role, permission) values ('ADMIN', 'users:list,add,remove,edit');
 

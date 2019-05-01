@@ -10,6 +10,7 @@ import com.vaadin.flow.router.Route;
 import net.azry.p2p.ui.shiro.authc.AuthenticationUtils;
 import net.azry.p2p.ui.User;
 import net.azry.p2p.ui.views.app.HomeView;
+import org.apache.shiro.authc.UnknownAccountException;
 
 import java.sql.SQLException;
 
@@ -33,7 +34,7 @@ public class LoginView extends VerticalLayout {
 			User user = null;
 			try {
 				user = User.getByDisplayName(e.getUsername());
-			} catch (SQLException ex) {
+			} catch (SQLException | UnknownAccountException ex) {
 				ex.printStackTrace();
 				component.setError(true);
 				return;

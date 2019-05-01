@@ -14,10 +14,11 @@ import javax.sql.DataSource;
 
 public class P2pJdbcRealm extends JdbcRealm {
 	public P2pJdbcRealm() {
-		setAuthenticationQuery("select password, salt from users where uuid = ?");
-		setUserRolesQuery("select role from roles where uuid = ?");
-		setPermissionsQuery("select permission from permissions where role = ?");
+		setAuthenticationQuery("SELECT password, salt FROM users WHERE uuid = ? AND locked = FALSE");
+		setUserRolesQuery("SELECT role FROM roles WHERE uuid = ?");
+		setPermissionsQuery("SELECT permission FROM permissions WHERE role = ?");
 
+		setPermissionsLookupEnabled(true);
 		setSaltStyle(SaltStyle.COLUMN);
 
 		PasswordMatcher matcher = new PasswordMatcher();

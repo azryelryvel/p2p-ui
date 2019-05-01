@@ -20,7 +20,9 @@ public class User {
 
 	private String email;
 
-	private Set<Roles> roles;
+	private boolean locked;
+
+	private Set<Roles> roles = new HashSet<>();
 
 	public User() {
 		uuid = UUID.randomUUID().toString();
@@ -87,6 +89,33 @@ public class User {
 		statement.close();
 	}
 
+	public void delete() throws SQLException {
+		Connection connection = DatabaseConnectionFactory.getDatabaseConnection();
+		String query = "DELETE FROM users WHERE uuid = ?";
+		PreparedStatement statement = connection.prepareStatement(query);
+		statement.setString(1, uuid);
+		statement.execute();
+		statement.close();
+	}
+
+	public void lock() throws SQLException {
+		Connection connection = DatabaseConnectionFactory.getDatabaseConnection();
+		String query = "UPDATE users SET locked = 1 WHERE uuid = ?";
+		PreparedStatement statement = connection.prepareStatement(query);
+		statement.setString(1, uuid);
+		statement.execute();
+		statement.close();
+	}
+
+	public void unlock() throws SQLException {
+		Connection connection = DatabaseConnectionFactory.getDatabaseConnection();
+		String query = "UPDATE users SET locked = 0 WHERE uuid = ?";
+		PreparedStatement statement = connection.prepareStatement(query);
+		statement.setString(1, uuid);
+		statement.execute();
+		statement.close();
+	}
+
 	public void addRole(Roles role) throws SQLException {
 		Connection connection = DatabaseConnectionFactory.getDatabaseConnection();
 
@@ -108,6 +137,8 @@ public class User {
 		statement.setString(2, role.toString());
 		statement.execute();
 		statement.close();
+
+		roles.add(role);
 	}
 
 	public void updatePassword(String password) throws SQLException {
@@ -187,15 +218,15 @@ public class User {
 		return SecurityUtils.getSubject().hasRole(role.toString());
 	}
 
-	public boolean isAdmin() {
-		return hasRole(Roles.ADMIN);
+	public boolean hasPermission(String permission) {
+		return SecurityUtils.getSubject().isPermitted(permission);
 	}
 
 	public static Set<User> listUsersByRole(Roles role) {
 		Set<User> userList = new HashSet<>();
 		try {
 			Connection connection = DatabaseConnectionFactory.getDatabaseConnection();
-			String query = "SELECT users.uuid, users.display_name, users.email FROM users LEFT JOIN (roles) ON (roles.uuid = users.uuid) WHERE roles.role = ?;";
+			String query = "SELECT users.uuid, users.display_name, users.email, users.locked FROM users LEFT JOIN (roles) ON (roles.uuid = users.uuid) WHERE roles.role = ?;";
 			PreparedStatement statement = connection.prepareStatement(query);
 			statement.setString(1, role.toString());
 			ResultSet rs = statement.executeQuery();
@@ -203,17 +234,53 @@ public class User {
 				String uuid = rs.getString(1);
 				String displayName = rs.getString(2);
 				String email = rs.getString(3);
+				boolean locked = rs.getBoolean(4);
 
 				User user = new User(uuid);
 				user.displayName = displayName;
 				user.email = email;
+				user.locked = locked;
 				userList.add(user);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 		return userList;
+	}
 
+	public static Set<User> listAllUsers() {
+		Set<User> userList = new HashSet<>();
+		try {
+			Connection connection = DatabaseConnectionFactory.getDatabaseConnection();
+			String query = "SELECT users.uuid, users.display_name, users.email, users.locked, roles.role FROM users LEFT JOIN (roles) ON (roles.uuid = users.uuid);";
+			PreparedStatement statement = connection.prepareStatement(query);
+			ResultSet rs = statement.executeQuery();
+			while (rs.next()) {
+				String uuid = rs.getString(1);
+				String displayName = rs.getString(2);
+				String email = rs.getString(3);
+				boolean locked = rs.getBoolean(4);
+				String roleString = rs.getString(5);
+				Optional<Roles> role = Arrays.stream(Roles.values()).filter(r -> r.toString().equals(roleString)).findAny();
+
+				Optional<User> existingUser = userList.stream().filter(u -> u.getUuid().equals(uuid)).findAny();
+
+				if (existingUser.isPresent()) {
+					role.ifPresent(r -> existingUser.get().roles.add(r));
+				} else {
+					User user = new User(uuid);
+					user.displayName = displayName;
+					user.email = email;
+					user.locked = locked;
+					user.roles = new HashSet<>();
+					role.ifPresent(r -> user.roles.add(r));
+					userList.add(user);
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return userList;
 	}
 
 	public String getUuid() {
@@ -244,4 +311,19 @@ public class User {
 		return roles;
 	}
 
+	public boolean isLocked() {
+		return locked;
+	}
+
+	@Override
+	public boolean equals(Object otherUser) {
+		if (this == otherUser) {
+			return true;
+		}
+		if (otherUser == null || getClass() != otherUser.getClass()) {
+			return false;
+		}
+		return ((User) otherUser).getUuid().equals(getUuid());
+
+	}
 }

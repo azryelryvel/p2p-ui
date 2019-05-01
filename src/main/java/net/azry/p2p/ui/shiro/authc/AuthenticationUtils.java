@@ -22,6 +22,10 @@ import java.sql.SQLException;
 public class AuthenticationUtils {
 	static boolean isInitialized  = false;
 
+	public static String generateRandomPlainPassword(int length) {
+		return new BigInteger(250, new SecureRandom()).toString(32).substring(0, length - 1);
+	}
+
 	public static String[] generateSaltedHashedPassword(String password) {
 		String publicSalt = new BigInteger(250, new SecureRandom()).toString(32);
 
@@ -58,7 +62,7 @@ public class AuthenticationUtils {
 			String displayName = Config.properties.get("authentication.default_admin");
 			String email = Config.properties.get("authentication.default_admin_mail");
 			int passLength = Integer.parseInt(Config.properties.get("authentication.default_admin_password_length"));
-			String password = new BigInteger(250, new SecureRandom()).toString(32).substring(0, passLength - 1);
+			String password = generateRandomPlainPassword(passLength);
 
 			User admin = new User();
 			admin.setDisplayName(displayName);
