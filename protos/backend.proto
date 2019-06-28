@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "net.azry.p2pd.protos";
+option java_outer_classname = "BackendProto";
+option objc_class_prefix = "BD";
+
+package backend;
+
+service Backend {
+    // Add a magnet link for download
+    rpc add (MagnetLink) returns (Ack) {}
+
+    // List all the torrents from the backend's list as a Json object
+    rpc list (Empty) returns (JsonPayload) {}
+
+    // Pings the backend to check for its health
+    rpc Check (Empty) returns (Health) {}
+}
+
+message MagnetLink {
+    string link = 1;
+    string id = 2;
+}
+
+message Ack {
+    bool success = 1;
+    string error = 2;
+}
+
+message Empty {}
+
+message JsonPayload {
+    string value = 1;
+}
+
+message Health {
+    bool alive = 1;
+}

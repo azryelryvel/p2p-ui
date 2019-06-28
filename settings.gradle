@@ -1,2 +1,2 @@
-rootProject.name = 'ui'
-
+rootProject.name = 'p2pd'
+include "core", "ui", "daemon"
